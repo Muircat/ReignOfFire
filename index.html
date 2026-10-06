@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Reign of Fire</title>
+  <meta name="description" content="Personal gym, nutrition and grooming tracker for the Reign of Fire plan.">
+  <meta name="theme-color" content="#110f0e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f3ef" media="(prefers-color-scheme: light)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reign of Fire">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app" aria-live="polite"></main>
+
+  <nav class="nav" aria-label="Main">
+    <div class="nav-inner">
+      <a href="#today" data-tab="today">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 .8-3.3 2-4.5.3 1.6 1 2.5 2 3 0-3 .2-5.8 1-8.5z"/></svg>
+        Today
+      </a>
+      <a href="#progress" data-tab="progress">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-4 3 3 7-7"/><path d="M15 7h4v4"/></svg>
+        Progress
+      </a>
+      <a href="#plan" data-tab="plan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        Plan
+      </a>
+    </div>
+  </nav>
+
+  <div id="workout" class="hidden" role="dialog" aria-modal="true" aria-label="Workout"></div>
+  <div id="rest" class="rest hidden" role="timer" aria-live="off"></div>
+  <div id="layer"></div>
+
+  <script src="plan.js"></script>
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -36,8 +36,12 @@
     u: 0,
   };
 
+  /* You: name, starting bodyweight, the weekdays you plan to train and the
+     day you pressed Start. Workouts rotate in order on whichever days you go. */
+  const DEFAULT_PROFILE = { name: "", startKg: null, startDate: null, days: P.days.map((d) => d.dow), level: "new", u: 0 };
+
   function blank() {
-    return { v: 1, sessions: {}, bw: {}, habits: {}, chores: {}, overrides: {}, deloads: {}, settings: { ...DEFAULT_SETTINGS } };
+    return { v: 2, sessions: {}, bw: {}, habits: {}, chores: {}, overrides: {}, deloads: {}, settings: { ...DEFAULT_SETTINGS }, profile: { ...DEFAULT_PROFILE } };
   }
 
   function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -50,6 +54,8 @@
     for (const k of ["sessions", "bw", "habits", "chores", "overrides", "deloads"]) b[k] = s[k] && typeof s[k] === "object" ? s[k] : {};
     b.settings = { ...DEFAULT_SETTINGS, ...(s.settings || {}) };
     b.settings.optional = { ...DEFAULT_SETTINGS.optional, ...((s.settings || {}).optional || {}) };
+    b.profile = { ...DEFAULT_PROFILE, ...(s.profile || {}) };
+    if (!Array.isArray(b.profile.days) || !b.profile.days.length) b.profile.days = DEFAULT_PROFILE.days.slice();
     return b;
   }
 
@@ -75,6 +81,7 @@
       }
     }
     out.settings = (b.settings.u || 0) > (a.settings.u || 0) ? b.settings : a.settings;
+    out.profile = (b.profile.u || 0) > (a.profile.u || 0) ? b.profile : a.profile;
     return out;
   }
 
@@ -121,7 +128,9 @@
   }
   /* Training weeks since the last deload (weeks containing ≥1 normal session) */
   function blockInfo(on = today()) {
-    const since = lastDeloadEnd(on);
+    const sd = state.profile.startDate ? addDays(state.profile.startDate, -1) : null;
+    const ld = lastDeloadEnd(on);
+    const since = ld && sd ? (ld > sd ? ld : sd) : ld || sd;
     const thisMon = mondayOf(on);
     const weeks = new Set();
     for (const s of sessionsSorted()) {
@@ -171,10 +180,11 @@
     const reps = (n) => Array(ex.sets).fill(n);
 
     if (ov && (!last || ov.u > last.end)) {
-      return { w: ov.w, reps: reps(ex.type === "amrap" ? (last ? Math.max(...evaluate(key, last.ex[key]).reps) : 8) : ov.r || ex.lo), status: "set", msg: "Set manually", last: last && last.ex[key], fails: 0 };
+      return { w: ov.w, reps: reps(ex.type === "amrap" ? (last ? Math.max(...evaluate(key, last.ex[key]).reps) : 8) : ov.r || ex.lo), status: last ? "set" : "new",
+        msg: last ? "You set this weight — the app progresses from here" : "First time — pick a weight that leaves 2–3 reps in the tank", last: last && last.ex[key], fails: 0 };
     }
     if (!last) {
-      return { w: ex.start, reps: reps(ex.type === "amrap" ? 8 : ex.lo), status: "new", msg: "First time — pick a weight that leaves ~2 reps in the tank", last: null, fails: 0 };
+      return { w: firstWeight(key, state.profile.level), reps: reps(ex.type === "amrap" ? 8 : ex.lo), status: "new", msg: "First time — pick a weight that leaves 2–3 reps in the tank", last: null, fails: 0 };
     }
 
     const le = last.ex[key];
@@ -210,9 +220,16 @@
         msg = status === "reps" ? `Aim for +${next - prevT} ${unit(key)} per set` : fails >= 2 ? "Missed twice — same target, own the form" : "Same target — get every set there";
       }
     }
-    if (fails >= 3 && ex.inc > 0 && ex.type !== "amrap") {
+    if (fails >= 3 && ex.inc > 0 && ex.type !== "amrap" && le.w > 0) {
       status = "stall";
       msg = `Stuck ${fails} sessions — consider resetting 10% to ${fmtW(roundFor(ex.kind, le.w * 0.9))} kg and building back`;
+    }
+    // Flexible: after 14+ days away from a lift, ease back in 10% lighter
+    const away = diffDays(today(), last.date);
+    if (away >= 14 && w > 0 && ex.kind !== "none" && ex.type !== "time") {
+      w = roundFor(ex.kind, w * 0.9);
+      if (ex.kind === "barbell") w = Math.max(state.settings.bar, w);
+      status = "back"; msg = `Welcome back — ${away} days since you last did this, so it's 10% lighter today`;
     }
     return { w, reps: r, status, msg, last: le, fails, lastDate: last.date };
   }
@@ -223,7 +240,7 @@
     const d = opts.deload != null ? opts.deload : !!activeDeload();
     const sets = d ? Math.max(1, ex.sets - (ex.sets >= 5 ? 2 : 1)) : ex.sets;
     const out = { ...t, sets, reps: t.reps.slice(0, sets) };
-    if (d) { out.w = roundFor(ex.kind, t.w * 0.65); if (ex.kind === "barbell") out.w = Math.max(state.settings.bar, out.w); out.status = "deload"; out.msg = `Deload: ${sets} sets at ~65% — same reps, easy and crisp`; out.normalW = t.w; }
+    if (d) { out.w = roundFor(ex.kind, t.w * 0.65); if (ex.kind === "barbell") out.w = Math.max(state.settings.bar, out.w); out.status = "deload"; out.msg = `Light week: ${sets} sets at about 65% — same reps, nice and easy`; out.normalW = t.w; }
     return out;
   }
 
@@ -254,35 +271,71 @@
     const m = mondayOf(on), sun = addDays(m, 6);
     return sessionsSorted().filter((s) => s.date >= m && s.date <= sun);
   }
-  /* Decide what to show on Today: today's session, a missed one to catch up, or rest */
+  /* ---------- flexible schedule
+     The four workouts always run in order (Upper A → Lower A → Upper B →
+     Lower B → …). Whatever day you train, you just do the next one, so a
+     missed day never breaks anything — the plan simply waits for you. */
+  const planDays = () => state.profile.days.slice().sort((a, b) => a - b);
+  const weeklyGoal = () => Math.max(1, planDays().length);
+  function nextWorkout() {
+    const ss = sessionsSorted();
+    const last = ss[ss.length - 1];
+    if (!last) return P.days[0];
+    const i = P.days.findIndex((d) => d.key === last.day);
+    return P.days[(i + 1) % P.days.length];
+  }
   function plan(on = today()) {
     const done = weekSessions(on);
-    const doneKeys = new Set(done.map((s) => s.day));
     const d = dow(on);
-    const todays = P.days.find((x) => x.dow === d);
+    const pd = planDays();
     const doneToday = done.find((s) => s.date === on);
-    const missed = P.days.filter((x) => x.dow < d && !doneKeys.has(x.key));
-    const upcoming = P.days.filter((x) => x.dow > d && !doneKeys.has(x.key));
-    let primary = null, reason = "";
+    const plannedToday = pd.includes(d);
+    const sd = state.profile.startDate || "0000-00-00";
+    const mon = mondayOf(on);
+    const dueByNow = pd.filter((x) => x <= d && addDays(mon, x - 1) >= sd).length; // planned days so far, since you started
+    const missed = Math.max(0, dueByNow - (plannedToday ? 1 : 0) - done.filter((s) => s.date < on && s.date >= sd).length);
+    const goal = weeklyGoal();
+    const next = nextWorkout();
+    let reason;
     if (doneToday) reason = "done";
-    else if (todays && !doneKeys.has(todays.key)) { primary = todays; reason = "scheduled"; }
-    else if (missed.length) { primary = missed[0]; reason = "catchup"; }
+    else if (done.length >= goal) reason = "goal";                 // week's target hit — anything extra is a bonus
+    else if (plannedToday) reason = missed ? "scheduled-catchup" : "scheduled";
+    else if (missed) reason = "catchup";
     else reason = "rest";
-    return { primary, reason, doneToday, missed, upcoming, done, todays };
+    const lastS = sessionsSorted().slice(-1)[0];
+    return { primary: next, next, reason, doneToday, missed, done, goal, plannedToday, daysSince: lastS ? diffDays(on, lastS.date) : null };
   }
   function nextScheduled(on = today()) {
-    for (let i = 1; i <= 7; i++) { const dt = addDays(on, i); const x = P.days.find((p) => p.dow === dow(dt)); if (x) return { day: x, date: dt }; }
+    const pd = planDays();
+    for (let i = 1; i <= 7; i++) { const dt = addDays(on, i); if (pd.includes(dow(dt))) return { day: nextWorkout(), date: dt }; }
     return null;
   }
+  function started() { return !!state.profile.startDate; }
+  /* Press Start: save who you are, log your starting weight, set first-session
+     weights for lifts you haven't logged yet, and begin week 1 today. */
+  function startProgramme({ name, startKg, days, level, weights = {} }) {
+    const t = today();
+    state.profile = touch({ ...state.profile, name: (name || "").trim(), startKg: startKg || null, days: days && days.length ? days : DEFAULT_PROFILE.days.slice(), level: level || "new", startDate: t });
+    if (startKg) state.bw[t] = touch({ date: t, kg: startKg });
+    for (const [k, w] of Object.entries(weights)) if (EX[k] && !history(k).length) state.overrides[k] = touch({ w });
+    save({ important: true });
+  }
+  function updateProfile(patch) {
+    state.profile = touch({ ...state.profile, ...patch });
+    save();
+  }
+  function restartProgramme() { state.profile = touch({ ...state.profile, startDate: null }); save({ important: true }); }
+  const firstWeight = (k, level) => (level === "new" && P.beginner && P.beginner[k] != null ? P.beginner[k] : EX[k].start);
 
   function weekStreak(on = today()) {
-    // consecutive weeks with ≥3 sessions; current week counts once it qualifies
+    // consecutive weeks hitting (nearly) your weekly goal; current week counts once it qualifies
+    const need = Math.max(1, weeklyGoal() - 1);
     const byWeek = {};
     for (const s of sessionsSorted()) byWeek[mondayOf(s.date)] = (byWeek[mondayOf(s.date)] || 0) + 1;
     let m = mondayOf(on), n = 0;
-    if ((byWeek[m] || 0) >= 3) n++;
+    if ((byWeek[m] || 0) >= need) n++;
     m = addDays(m, -7);
-    while ((byWeek[m] || 0) >= 3) { n++; m = addDays(m, -7); }
+    while ((byWeek[m] || 0) >= need) { n++; m = addDays(m, -7); }
     return n;
   }
 
@@ -346,9 +399,9 @@
   function headsUp(on = today()) {
     const items = [];
     const b = blockInfo(on);
-    if (b.deload) items.push({ kind: "deload-on", tone: "info", title: "Deload week", text: `Lighter loads until ${fmtDate(b.deload.end)}. Recover, then come back stronger.`, action: "end-deload", actionLabel: "End early" });
-    else if (b.due) items.push({ kind: "deload", tone: "warn", title: "Deload week due", text: `${b.week - 1} training weeks done. This week: fewer sets at ~65% — the app adjusts every target.`, action: "start-deload", actionLabel: "Start deload" });
-    else if (b.soon) items.push({ kind: "deload-soon", tone: "info", title: "Deload next week", text: `You're in training week ${b.week}. Push this week — easy week follows.` });
+    if (b.deload) items.push({ kind: "deload-on", tone: "info", title: "Light week 🌿", text: `Easier weights until ${fmtDate(b.deload.end)}. Recover, then come back stronger.`, action: "end-deload", actionLabel: "End early" });
+    else if (b.due) items.push({ kind: "deload", tone: "warn", title: "Time for a light week", text: `${b.week - 1} training weeks done. A week of fewer sets at ~65% (a "deload") lets you recover — the app adjusts everything.`, action: "start-deload", actionLabel: "Start it" });
+    else if (b.soon) items.push({ kind: "deload-soon", tone: "info", title: "Light week coming up", text: `You're in training week ${b.week}. Push this week — an easier week follows.` });
 
     for (const key of Object.keys(EX)) {
       const t = baseTarget(key);
@@ -472,7 +525,8 @@
     get state() { return state; },
     save, touch, onChange: (fn) => listeners.add(fn), merge,
     today, addDays, diffDays, dow, mondayOf, parse, ymd, fmtDate, fmtW,
-    EX, dayByKey, plan, nextScheduled, weekSessions, weekStreak, sessionsSorted,
+    EX, dayByKey, plan, nextScheduled, nextWorkout, weekSessions, weekStreak, sessionsSorted, weeklyGoal, planDays,
+    started, startProgramme, updateProfile, restartProgramme, firstWeight, history,
     target, baseTarget, warmupSets, plates, roundFor, unit, resetLift, logged, evaluate,
     liftSeries, sessionScore, loaded, e1rm,
     blockInfo, startDeload, endDeload, activeDeload,

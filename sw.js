@@ -1,6 +1,6 @@
 /* Offline support: serve the app shell from cache, refresh it in the background.
    Bump VERSION when you change files so phones pick up the new build. */
-const VERSION = "rof-v1";
+const VERSION = "rof-v2";
 const SHELL = ["./", "index.html", "styles.css", "plan.js", "engine.js", "app.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {

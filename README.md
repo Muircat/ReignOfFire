@@ -1,56 +1,70 @@
 # 🔥 Reign of Fire — personal training tracker
 
-A phone-first web app built from the *Reign of Fire Gym Plan*: the 4-day upper/lower split, nutrition targets, and skincare and grooming routine. It runs entirely in the browser with no server, no account and no build step. It also works offline.
+A light, phone-first web app for the *Reign of Fire Gym Plan*. It covers the four-workout upper/lower programme, nutrition targets, and the skincare and grooming routine. There's no server, no account and no build step, and it works offline.
 
 ## Put it on GitHub Pages (about 3 minutes)
 
-1. Create a new repository on GitHub, for example `gym`. Public is fine because your data is never stored in the repo.
-2. Click **Add file → Upload files**, drag in **every file in this folder**, then click **Commit changes**.
-3. Go to **Settings → Pages**. Under **Source**, pick **Deploy from a branch**, choose **main** and **/ (root)**, then click **Save**.
-4. After a minute, your app is live at `https://<your-username>.github.io/gym/`.
-5. On your phone, open that link, then use **Share → Add to Home Screen** (iPhone) or **⋮ → Install app** (Android). It now opens full-screen like a normal app.
+1. Create a GitHub repository (e.g. `gym`). Public is fine, because your data is never stored in the repo.
+2. **Add file → Upload files**, drag in **every file in this folder** (including the hidden `.nojekyll`), then **Commit**.
+3. Go to **Settings → Pages**, set **Source** to **Deploy from a branch**, pick **main** and **/ (root)**, then **Save**.
+4. A minute later your app is live at `https://<your-username>.github.io/gym/`.
+5. On your phone, open that link, then **Share → Add to Home Screen** (iPhone) or **⋮ → Install app** (Android).
 
-## How to use it
+**Updating from an older version?** Upload the new files over the old ones. Your logged workouts are kept. You'll go through the short setup once, and your weights carry over.
 
-- **Today** tells you what to do: today's session (or a missed one to catch up), anything that needs your attention, your daily habits and a weigh-in box.
-- **Start workout** shows every weight already filled in. Tap a circle when you finish a set. Tap the same circle again to log one rep fewer. Press and hold a circle to type an exact number. The rest timer starts by itself.
-- **Finish** saves the session and shows you what changes next time.
-- **Progress** shows your strength trends, how fast you're gaining weight against the 0.25–0.5 kg/week target, a consistency calendar and your workout history.
-- **Plan** holds the full programme, the rules, your routine, reminders, settings and your data.
+## How it works
 
-## What it handles behind the scenes
+**1. Setup (once).** Enter your name and starting weight, tap the days you can usually train, and say whether you're new to lifting. Then press **Start my programme**. Week 1 begins then, not before.
+
+**2. Today.** Shows the next workout, a preview of the weights, and a **Start workout** button. The four workouts always go in order: Upper A → Lower A → Upper B → Lower B → repeat.
+- **Train on any day.** If you swap Thursday for Friday, you just do the next workout.
+- **Miss a day** and nothing gets skipped. The plan waits for you, and the app tells you so.
+- **Away for 2+ weeks?** Any lift you haven't done in that time comes back 10% lighter so you ease back in.
+
+**3. The workout shows one exercise at a time.**
+- A short form tip, plus a **Watch how** link to video demos.
+- Big **weight** and **reps** numbers. Use − / + if you want to change the weight.
+- For barbell lifts, a picture of **which plates go on each side**.
+- Warm-up sets listed for you on the first heavy lift of the day.
+- One big **✓ Done set** button. The rest timer starts by itself, then beeps and buzzes when it's time to go again.
+- If you did fewer reps, tap **Did fewer or more?** You can also tap a set circle (one less rep per tap) or hold it to type a number.
+- **Next →** moves you on. **Finish** saves the workout and shows your next targets.
+
+**4. Me & plan** is where you change your name, starting weight and training days, or restart from week 1.
+
+## What it handles for you (same rules as the spreadsheet)
 
 | Area | What the engine does |
 |---|---|
-| Progression | Applies each exercise's rule from the plan. Fixed-rep lifts gain weight once every set is hit. Rep-range lifts add reps up to the top of the range, then add weight and drop back to the bottom. Pull-ups add load once you average 12+ reps a set. The plank adds seconds, then a plate. |
-| Misses | If you miss reps, the weight stays the same. After 2 misses in a row it tells you to focus on form. After 3 it offers a one-tap 10% reset. |
-| Warm-ups | Works out the ramp sets (bar, then 50/70/85%, or 40/60/80% for deadlift) from today's working weight. |
-| Plates | Shows the plates to load on each side of a 20 kg bar. You can change the bar weight and plate set. |
-| Rest | 2:30 for heavy compound lifts and 1:15 for accessories, both adjustable. The timer beeps and vibrates, and the screen stays awake. |
-| Deloads | Counts your training weeks. In week 6 it suggests a deload: 1–2 fewer sets at about 65%, same reps. Deload sessions never affect progression. |
-| Bodyweight | Smooths your weigh-ins into a 7-day average, measures your weekly rate of gain and suggests a calorie change, for example "+200 kcal/day". |
-| Reminders | Pillowcase, haircut, nails, eyebrows and restocking your skincare products, each based on when you last did it. |
-| Sync | Optional. Paste a GitHub token with only the `gist` scope to sync between phone and laptop through a private gist. Each entry is merged separately and the newest change wins, including deletions. |
+| Progression | Fixed-rep lifts: add weight once every set hits its reps. Rep-range lifts: add reps up to the top of the range, then add weight and drop back to the bottom. Pull-ups: add weight once you average 12+ reps a set. Plank: add seconds, then a plate. |
+| Misses | Keeps the same weight after a miss. Two misses in a row: focus on form. Three: offers a one-tap 10% reset. |
+| Warm-ups | Ramp sets worked out from today's weight (bar, 50%, 70%, 85%; for deadlift: bar, 40%, 60%, 80%). |
+| Plates | Shows which plates go on each side of the bar. You can change the bar weight. |
+| Rest | 2:30 for big lifts, 1:15 for smaller ones (adjustable). The screen stays awake. |
+| Light weeks | Counts your training weeks from when you pressed Start. Suggests a light week (a deload: fewer sets at ~65%) in week 6. Light-week sessions don't affect your progress. |
+| Bodyweight | Works out a 7-day average, your weekly gain against the 0.25–0.5 kg/week target, your total change since you started, and a suggested calorie adjustment. |
+| Reminders | Pillowcase, haircut, nails, eyebrows and restocking skincare, each based on when you last did it. |
+| Sync | Optional. Add a GitHub token with only the `gist` scope to sync between phone and laptop through a private gist. |
 
 ## Your data
 
-- Your data is stored in your browser's local storage on each device.
-- **Plan → Back up** downloads a `.json` file. **Restore / merge** brings a backup back in without overwriting newer entries.
-- **Export log (.csv)** gives you every set you've logged, ready to open in Excel or Google Sheets.
+- Your data is stored in your browser on each device.
+- **Back up** downloads a `.json` file. **Restore / merge** brings one back without overwriting newer entries.
+- **Export log (.csv)** gives you every set you've logged, ready for Excel or Google Sheets.
 
 ## Changing the plan
 
-Everything about the programme is in **`plan.js`**: exercises, sets, rep ranges, weight increases, warm-ups, habits and reminders. Edit it and commit the change. Your history is kept, and the next targets are recalculated from it.
+Everything about the programme lives in **`plan.js`**: exercises, sets, reps, increments, warm-ups, form tips, beginner starting weights, habits and reminders. Your history is never touched by changing it.
 
-If you change files after installing the app, open `sw.js` and bump `VERSION` (for example `rof-v2`) so installed copies pick up the update.
+After changing any file, bump `VERSION` in `sw.js` (e.g. `rof-v3`) so installed copies pick up the update.
 
 ## Files
 
 ```
 index.html            app shell
-styles.css            design (dark/light, mobile-first)
-plan.js               the programme, all the data from the spreadsheet
-engine.js             progression, deloads, trends, reminders, storage, sync
+styles.css            light & airy design (dark mode optional)
+plan.js               the programme: all the data from the spreadsheet
+engine.js             progression, schedule, light weeks, trends, reminders, storage, sync
 app.js                the interface
 sw.js                 offline support
 manifest.webmanifest  install-to-home-screen metadata

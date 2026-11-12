@@ -93,13 +93,54 @@ window.PLAN = {
                   rule: "+10–15 sec until 90 sec, then add weight plate on back" },
   },
 
-  // Weekday numbers: 1 = Monday … 7 = Sunday
+  // The four workouts, done in this order on whichever days you train.
+  // dow = the weekday the original plan suggested (1 = Monday … 7 = Sunday);
+  // it's only used as the default when you first pick your training days.
   days: [
-    { key: "upperA", dow: 1, label: "Upper A", day: "Monday",   ex: ["bench", "pullup_w", "ohp", "row", "incline_db", "face_pull", "hlr"] },
-    { key: "lowerA", dow: 2, label: "Lower A", day: "Tuesday",  ex: ["squat", "rdl", "bss", "calf", "ab_wheel"] },
-    { key: "upperB", dow: 4, label: "Upper B", day: "Thursday", ex: ["incline_bb", "cs_row", "db_press", "pullup", "lateral", "ez_curl", "pushdown"] },
-    { key: "lowerB", dow: 5, label: "Lower B", day: "Friday",   ex: ["deadlift", "front_squat", "leg_press", "ham_curl", "lunges", "plank"] },
+    { key: "upperA", dow: 1, label: "Upper A", day: "Monday",   focus: "Chest, back & shoulders", ex: ["bench", "pullup_w", "ohp", "row", "incline_db", "face_pull", "hlr"] },
+    { key: "lowerA", dow: 2, label: "Lower A", day: "Tuesday",  focus: "Legs & core",             ex: ["squat", "rdl", "bss", "calf", "ab_wheel"] },
+    { key: "upperB", dow: 4, label: "Upper B", day: "Thursday", focus: "Chest, back & arms",      ex: ["incline_bb", "cs_row", "db_press", "pullup", "lateral", "ez_curl", "pushdown"] },
+    { key: "lowerB", dow: 5, label: "Lower B", day: "Friday",   focus: "Legs, hamstrings & core", ex: ["deadlift", "front_squat", "leg_press", "ham_curl", "lunges", "plank"] },
   ],
+
+  // Gentle first-session weights for "I'm new to lifting" (kg; DBs per hand,
+  // 0 on a bodyweight move = no added weight). Only used before you've
+  // logged an exercise — after that your own history takes over.
+  beginner: {
+    bench: 20, pullup_w: 0, ohp: 20, row: 20, incline_db: 8, face_pull: 10, hlr: 0,
+    squat: 20, rdl: 20, bss: 0, calf: 20, ab_wheel: 0,
+    incline_bb: 20, cs_row: 20, db_press: 6, pullup: 0, lateral: 4, ez_curl: 10, pushdown: 10,
+    deadlift: 40, front_squat: 20, leg_press: 40, ham_curl: 15, lunges: 0, plank: 0,
+  },
+
+  // One-line form cues shown during the workout
+  cues: {
+    bench: "Lie flat, feet planted. Lower the bar to mid-chest, then press it straight up.",
+    pullup_w: "Hang with straight arms, pull your chest to the bar. Can't do one yet? Use the lat pulldown and log its weight.",
+    ohp: "Stand tall, squeeze your glutes. Press the bar from your collarbones to overhead.",
+    row: "Hinge forward with a flat back. Pull the bar to your belly button.",
+    incline_db: "Bench at about 30°. Lower the dumbbells to your upper chest, press up.",
+    face_pull: "Rope at face height. Pull it towards your eyes, elbows high and wide.",
+    hlr: "Hang from the bar, raise your legs without swinging. Lower slowly.",
+    squat: "Bar on your upper back. Sit down between your heels, chest up, then stand tall.",
+    rdl: "Soft knees, push your hips back and slide the bar down your thighs. Squeeze up.",
+    bss: "Back foot on a bench. Drop your back knee towards the floor, push through the front heel.",
+    calf: "Rise as high as you can onto your toes, pause, lower all the way down.",
+    ab_wheel: "Kneel, brace your stomach, roll out only as far as you can keep your back flat.",
+    incline_bb: "Bench at about 30°. Lower the bar to your upper chest, press up.",
+    cs_row: "Chest on the pad. Pull your elbows back and squeeze your shoulder blades.",
+    db_press: "Sit upright. Press the dumbbells from shoulder height to overhead.",
+    pullup: "As many good reps as you can. Can't do one yet? Use the assisted machine.",
+    lateral: "Slight bend in the elbows. Raise the dumbbells out to the side to shoulder height.",
+    ez_curl: "Elbows pinned to your sides. Curl up, lower slowly.",
+    pushdown: "Elbows tucked in. Push the handle down until your arms are straight.",
+    deadlift: "Bar over mid-foot, flat back. Push the floor away and stand up tall.",
+    front_squat: "Bar rests on the front of your shoulders, elbows high. Sit down and stand up.",
+    leg_press: "Feet shoulder-width. Lower until your knees are at about 90°, press back up.",
+    ham_curl: "Curl the pad towards you, pause, lower slowly.",
+    lunges: "Big steps forward, back knee towards the floor. Count every step.",
+    plank: "Forearms down, body in a straight line. Squeeze your glutes and breathe.",
+  },
 
   nutrition: {
     calories: [2800, 3100],
